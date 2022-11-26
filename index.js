@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt =  require('jsonwebtoken');
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId, ObjectID } = require('mongodb');
 const port = process.env.PORT || 5000;
@@ -9,8 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json())
 
-//Data Base -----------------------------------------------
-
+//Data Base --
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.jcatyox.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -22,8 +22,25 @@ async function run() {
         const ProductCl = client.db("resell-com").collection("products");
         const categoryCl = client.db("resell-com").collection("category");
         const cartCl = client.db("resell-com").collection("cart");
-
-
+        const usersCl = client.db("resell-com").collection("users");
+        //------------------------------------------------------
+        // ------------------Users----------------------
+        app.put('/users/:email',async(req, res) =>{
+            const email = req.params.email;
+            const users = req.body;
+            const filter = {email: email}
+            const options = {upsert: true}
+            const updateDoc = {
+                $set: users,
+            }
+            const result = await usersCl.updateOne(filter, updateDoc, options)
+            console.log(result);
+            const token = jwt.sign(users, process.env.SECRET_TOKEN,{
+                expiresIn: '1d',
+            })
+            res.send({result,token})
+         })
+        //------------------------------------------------------
         app.get('/products',async(req, res) =>{
             const cursor = ProductCl.find({});
             const mobile = await cursor.toArray();
@@ -63,6 +80,8 @@ async function run() {
             const result = await cartCl.deleteOne(query);
             res.send(result)
         })
+        //------------------------------------------------------
+        
     }
     finally{
 
