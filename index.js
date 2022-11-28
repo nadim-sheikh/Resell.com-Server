@@ -38,20 +38,17 @@ async function run() {
             res.status(403).send({accessToken: ''})
         })
 
-        app.get('/users',async(req, res) =>{
+        app.get('/users', async(req, res) =>{
             const cursor = usersCl.find({});
             const user = await cursor.toArray();
             res.send(user);
         })
 
         app.post('/users', async(req, res) =>{
-        const user = req.body;
-        const result = await usersCl.insertOne(user)
-        res.send(result)
+            const user = req.body;
+            const result = await usersCl.insertOne(user);
+            res.send(result);
         })
-
-
-
 
         //------------------------------------------------------
         app.get('/category',async(req, res) =>{
@@ -82,7 +79,7 @@ async function run() {
             const mobile = await ProductCl.findOne(query);
             res.send(mobile);
         })
-        app.get('/cart', async(req, res)=>{
+        app.get('/cart',  async(req, res)=>{
             let query = {}
             if(req.query.email){
                 query = {
