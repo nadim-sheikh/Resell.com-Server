@@ -3,6 +3,7 @@ const cors = require('cors');
 const jwt =  require('jsonwebtoken');
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId, ObjectID } = require('mongodb');
+const { query } = require('express');
 const port = process.env.PORT || 5000;
 
 const app = express();
@@ -10,7 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json())
 
-//Data Base --
+//Data Base -----------------------
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.jcatyox.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -25,31 +26,55 @@ async function run() {
         const usersCl = client.db("resell-com").collection("users");
         //------------------------------------------------------
         // ------------------Users----------------------
-        app.put('/users/:email',async(req, res) =>{
-            const email = req.params.email;
-            const users = req.body;
-            const filter = {email: email}
-            const options = {upsert: true}
-            const updateDoc = {
-                $set: users,
+
+        app.get('/jwt', async(req, res) =>{
+            const email = req.query.email
+            const query = {email: email}
+            const user = await usersCl.findOne(query)
+            if(user){
+                const accessToken = jwt.sign({email}, process.env.SECRET_TOKEN, {expiresIn: '1h'})
+                return res.send({accessToken: accessToken})
             }
-            const result = await usersCl.updateOne(filter, updateDoc, options)
-            console.log(result);
-            const token = jwt.sign(users, process.env.SECRET_TOKEN,{
-                expiresIn: '1d',
-            })
-            res.send({result,token})
-         })
+            res.status(403).send({accessToken: ''})
+        })
+
+        app.get('/users',async(req, res) =>{
+            const cursor = usersCl.find({});
+            const user = await cursor.toArray();
+            res.send(user);
+        })
+
+        app.post('/users', async(req, res) =>{
+        const user = req.body;
+        const result = await usersCl.insertOne(user)
+        res.send(result)
+        })
+
+
+
+
         //------------------------------------------------------
+        app.get('/category',async(req, res) =>{
+            const cursor = categoryCl.find({});
+            const category = await cursor.toArray();
+            res.send(category);
+        })
+        app.get('category/:id',async(req, res) =>{
+           const id = req.params.id;
+            const category = await ProductCl.filter(c=> c.
+                category === 
+                id);
+            res.send(category);
+        })
         app.get('/products',async(req, res) =>{
             const cursor = ProductCl.find({});
             const mobile = await cursor.toArray();
             res.send(mobile);
         })
-        app.get('/category',async(req, res) =>{
-            const cursor = categoryCl.find({});
-            const category = await cursor.toArray();
-            res.send(category);
+        app.post('/products', async(req,res)=>{
+            const addProduct = req.body;
+            const result = await ProductCl.insertOne(addProduct);
+            res.send(result);
         })
         app.get('/products/:id', async(req, res)=>{
             const {id} = req.params;
