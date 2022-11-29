@@ -56,13 +56,17 @@ async function run() {
             const category = await cursor.toArray();
             res.send(category);
         })
-        app.get('category/:id',async(req, res) =>{
-           const id = req.params.id;
-            const category = await ProductCl.filter(c=> c.
-                category === 
-                id);
-            res.send(category);
+        
+        // app.get('category/:id',async(req, res) =>{
+           
+        // })
+        app.get('/categoriesProducts/:id', async (req, res) => {
+            const {id} = req.params;
+            const query = { category_id: id }
+            const result = await ProductCl.find(query).toArray()
+            res.send(result)
         })
+        
         app.get('/products',async(req, res) =>{
             const cursor = ProductCl.find({});
             const mobile = await cursor.toArray();
